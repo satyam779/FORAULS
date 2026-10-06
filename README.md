@@ -51,9 +51,9 @@ Copy [`.env.example`](.env.example) to `.env` for local development. Add the sam
 
 | Variable | Value |
 | --- | --- |
-| `VITE_SUPABASE_URL` | Project URL (Project Settings → API) |
-| `VITE_SUPABASE_KEY` | Publishable key, or the legacy `anon` key |
-| `SUPABASE_SECRET_KEY` | Secret key, or the legacy `service_role` key. **Server only.** Never give it a `VITE_` prefix. |
+| `SUPABASE_URL` | Project URL (Project Settings → API) |
+| `SUPABASE_KEY` | Publishable key, or the legacy `anon` key |
+| `SUPABASE_SECRET_KEY` | Secret key, or the legacy `service_role` key. **Server only.** Never add it to `define` in `vite.config.js` or give it a `VITE_` prefix. |
 | `SMTP_USER`, `SMTP_PASS` | Gmail address + App Password (or your provider's SMTP login) |
 | `SMTP_HOST`, `SMTP_PORT` | Defaults: `smtp.gmail.com`, `465` |
 | `ORDER_NOTIFY_EMAIL` | Optional: also email new orders to this address |

@@ -1,5 +1,5 @@
 /**
- * Supabase connection, configured by SUPABASE_URL and VITE_SUPABASE_KEY
+ * Supabase connection, configured by SUPABASE_URL and SUPABASE_KEY
  * (the project's publishable / anon key — safe to ship to browsers; row-level
  * security in supabase/schema.sql decides what it can do). When they're unset
  * the store runs on the bundled catalog and the admin page explains the setup.

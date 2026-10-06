@@ -77,6 +77,12 @@ export default defineConfig(({ mode }) => {
   for (const [k, v] of Object.entries(env)) process.env[k] ??= v;
   const supabase = (env.SUPABASE_URL || '').replace(/\/+$/, '');
   return {
+    // Vite only exposes VITE_* vars to the browser, so pass the two public ones
+    // by name. Never add SUPABASE_SECRET_KEY here.
+    define: {
+      'import.meta.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || ''),
+      'import.meta.env.SUPABASE_KEY': JSON.stringify(env.SUPABASE_KEY || ''),
+    },
     plugins: [react(), tailwindcss(), cspMeta(supabase), devApi()],
     build: {
       sourcemap: false,
