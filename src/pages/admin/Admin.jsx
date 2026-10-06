@@ -182,7 +182,7 @@ function Setup() {
     <Centered>
       <h1 className="text-xl font-bold">Connect Supabase</h1>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        The admin needs a Supabase project. Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_KEY</code> (in <code>.env</code>{' '}
+        The admin needs a Supabase project. Set <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> (in <code>.env</code>{' '}
         locally, and in your Vercel project’s environment variables), run <code>supabase/schema.sql</code>, then rebuild. The README has
         the full steps.
       </p>

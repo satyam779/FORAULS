@@ -75,7 +75,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   // server functions read process.env, as they do on Vercel
   for (const [k, v] of Object.entries(env)) process.env[k] ??= v;
-  const supabase = (env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+  const supabase = (env.SUPABASE_URL || '').replace(/\/+$/, '');
   return {
     plugins: [react(), tailwindcss(), cspMeta(supabase), devApi()],
     build: {

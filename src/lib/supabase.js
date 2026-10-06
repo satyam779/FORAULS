@@ -1,11 +1,11 @@
 /**
- * Supabase connection, configured by VITE_SUPABASE_URL and VITE_SUPABASE_KEY
+ * Supabase connection, configured by SUPABASE_URL and VITE_SUPABASE_KEY
  * (the project's publishable / anon key — safe to ship to browsers; row-level
  * security in supabase/schema.sql decides what it can do). When they're unset
  * the store runs on the bundled catalog and the admin page explains the setup.
  */
-export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
-export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY || '';
+export const SUPABASE_URL = (import.meta.env.SUPABASE_URL || '').replace(/\/+$/, '');
+export const SUPABASE_KEY = import.meta.env.SUPABASE_KEY || '';
 export const hasSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 /** Legacy keys are JWTs and also go in Authorization; the newer sb_… keys only in apikey. */

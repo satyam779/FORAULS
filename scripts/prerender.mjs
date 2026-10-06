@@ -21,8 +21,8 @@ await vite.close();
 
 // With Supabase configured, products added in the admin get pages too (as of this build).
 async function liveProducts() {
-  const url = (process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
-  const key = process.env.VITE_SUPABASE_KEY || '';
+  const url = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_KEY || '';
   if (!url || !key) return null;
   try {
     const res = await fetch(`${url}/rest/v1/products?select=*&active=eq.true&order=sort.asc`, {
