@@ -1,0 +1,253 @@
+{
+  "tiger-lily": {
+    "photos": [
+      {
+        "src": "tiger-lily/photo-1.webp",
+        "w": 1280,
+        "h": 1024
+      }
+    ],
+    "front": {
+      "src": "tiger-lily/front.webp",
+      "torso": 0.7256,
+      "armpit": 0.568,
+      "hem": 0.976,
+      "fabric": "#101113",
+      "w": 675,
+      "h": 750
+    },
+    "back": {
+      "src": "tiger-lily/back.webp",
+      "torso": 0.7349,
+      "armpit": 0.5737,
+      "hem": 0.9801,
+      "fabric": "#131416",
+      "w": 691,
+      "h": 753
+    }
+  },
+  "red-sun-cranes": {
+    "photos": [
+      {
+        "src": "red-sun-cranes/photo-1.webp",
+        "w": 1280,
+        "h": 1172
+      }
+    ],
+    "back": {
+      "src": "red-sun-cranes/back.webp",
+      "torso": 0.6811,
+      "armpit": 0.5053,
+      "hem": 0.9858,
+      "fabric": "#171719",
+      "w": 900,
+      "h": 813
+    }
+  },
+  "monte-carlo": {
+    "photos": [
+      {
+        "src": "monte-carlo/photo-1.webp",
+        "w": 636,
+        "h": 508
+      },
+      {
+        "src": "monte-carlo/photo-2.webp",
+        "w": 637,
+        "h": 508
+      },
+      {
+        "src": "monte-carlo/photo-3.webp",
+        "w": 636,
+        "h": 509
+      },
+      {
+        "src": "monte-carlo/photo-4.webp",
+        "w": 637,
+        "h": 509
+      }
+    ],
+    "back": {
+      "src": "monte-carlo/back.webp",
+      "torso": 0.6688,
+      "armpit": 0.5496,
+      "hem": 0.9802,
+      "fabric": "#1a1a1a",
+      "w": 622,
+      "h": 504
+    }
+  },
+  "money-war": {
+    "photos": [
+      {
+        "src": "money-war/photo-1.webp",
+        "w": 1280,
+        "h": 1180
+      }
+    ],
+    "front": {
+      "src": "money-war/front.webp",
+      "torso": 0.8466,
+      "armpit": 0.5321,
+      "hem": 0.9668,
+      "fabric": "#181818",
+      "w": 616,
+      "h": 900
+    },
+    "back": {
+      "src": "money-war/back.webp",
+      "torso": 0.8841,
+      "armpit": 0.5415,
+      "hem": 0.983,
+      "fabric": "#191919",
+      "w": 628,
+      "h": 900
+    }
+  },
+  "wander-beyond": {
+    "photos": [
+      {
+        "src": "wander-beyond/photo-1.webp",
+        "w": 1280,
+        "h": 1024
+      }
+    ],
+    "back": {
+      "src": "wander-beyond/back.webp",
+      "torso": 0.6712,
+      "armpit": 0.5461,
+      "hem": 0.9881,
+      "fabric": "#1d1d1d",
+      "w": 900,
+      "h": 816
+    }
+  },
+  "paper-dreams": {
+    "photos": [
+      {
+        "src": "paper-dreams/photo-1.webp",
+        "w": 1280,
+        "h": 1182
+      }
+    ],
+    "back": {
+      "src": "paper-dreams/back.webp",
+      "torso": 0.6891,
+      "armpit": 0.4969,
+      "hem": 0.9839,
+      "fabric": "#0e0e0e",
+      "w": 900,
+      "h": 807
+    }
+  },
+  "kraken": {
+    "photos": [
+      {
+        "src": "kraken/photo-1.webp",
+        "w": 1254,
+        "h": 1254
+      }
+    ],
+    "front": {
+      "src": "kraken/front.webp",
+      "torso": 0.6237,
+      "armpit": 0.6944,
+      "hem": 0.9853,
+      "fabric": "#202020",
+      "w": 900,
+      "h": 467
+    },
+    "back": {
+      "src": "kraken/back.webp",
+      "torso": 0.6221,
+      "armpit": 0.7055,
+      "hem": 0.9867,
+      "fabric": "#1f1f1f",
+      "w": 900,
+      "h": 460
+    }
+  },
+  "sunset-rock": {
+    "photos": [
+      {
+        "src": "sunset-rock/photo-1.webp",
+        "w": 1280,
+        "h": 853
+      }
+    ],
+    "back": {
+      "src": "sunset-rock/back.webp",
+      "torso": 0.8333,
+      "armpit": 0.5426,
+      "hem": 0.9817,
+      "fabric": "#17181a",
+      "w": 631,
+      "h": 763
+    },
+    "back-white": {
+      "src": "sunset-rock/back-white.webp",
+      "torso": 0.8032,
+      "armpit": 0.5349,
+      "hem": 0.9816,
+      "fabric": "#d9d5cf",
+      "w": 630,
+      "h": 759
+    }
+  },
+  "brave-bird": {
+    "photos": [
+      {
+        "src": "brave-bird/photo-1.webp",
+        "w": 1280,
+        "h": 853
+      }
+    ],
+    "back": {
+      "src": "brave-bird/back.webp",
+      "torso": 0.7904,
+      "armpit": 0.5402,
+      "hem": 0.9836,
+      "fabric": "#181818",
+      "w": 643,
+      "h": 733
+    },
+    "back-white": {
+      "src": "brave-bird/back-white.webp",
+      "torso": 0.7067,
+      "armpit": 0.5163,
+      "hem": 0.985,
+      "fabric": "#dedbd6",
+      "w": 682,
+      "h": 734
+    }
+  },
+  "_shared": {
+    "front-black": {
+      "src": "_shared/front-black.webp",
+      "torso": 0.7256,
+      "armpit": 0.568,
+      "hem": 0.976,
+      "fabric": "#101113",
+      "w": 675,
+      "h": 750
+    },
+    "front-washed": {
+      "src": "_shared/front-washed.webp",
+      "torso": 0.8466,
+      "armpit": 0.5321,
+      "hem": 0.9668,
+      "fabric": "#181818",
+      "w": 616,
+      "h": 900
+    },
+    "front-white": {
+      "src": "_shared/front-white.webp",
+      "torso": 0.7256,
+      "armpit": 0.568,
+      "hem": 0.976,
+      "fabric": "#b6b3ae",
+      "w": 675,
+      "h": 750
+    }
+  }
+}

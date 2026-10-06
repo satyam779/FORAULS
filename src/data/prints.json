@@ -1,0 +1,157 @@
+{
+  "_wordmark": {
+    "light": {
+      "src": "prints/forauls-wordmark.webp",
+      "rect": [
+        0.135,
+        0.545,
+        0.105,
+        0.0206
+      ]
+    },
+    "dark": {
+      "src": "prints/forauls-wordmark-dark.webp",
+      "rect": [
+        0.135,
+        0.545,
+        0.105,
+        0.0206
+      ]
+    }
+  },
+  "tiger-lily": {
+    "back": {
+      "src": "prints/tiger-lily-back.webp",
+      "rect": [
+        0.0,
+        0.375,
+        0.4398,
+        0.6
+      ]
+    }
+  },
+  "red-sun-cranes": {
+    "back": {
+      "src": "products/red-sun-cranes/print-back.webp",
+      "rect": [
+        0.0101,
+        0.375,
+        0.3882,
+        0.6
+      ]
+    }
+  },
+  "monte-carlo": {
+    "back": {
+      "src": "products/monte-carlo/print-back.webp",
+      "rect": [
+        -0.0045,
+        0.3529,
+        0.42,
+        0.4929
+      ]
+    }
+  },
+  "money-war": {
+    "front": {
+      "src": "products/money-war/print-front.webp",
+      "rect": [
+        0.1302,
+        0.5225,
+        0.1272,
+        0.0761
+      ]
+    },
+    "back": {
+      "src": "products/money-war/print-back.webp",
+      "rect": [
+        0.0251,
+        0.375,
+        0.4014,
+        0.6
+      ]
+    }
+  },
+  "wander-beyond": {
+    "back": {
+      "src": "products/wander-beyond/print-back.webp",
+      "rect": [
+        0.0082,
+        0.3581,
+        0.42,
+        0.5493
+      ]
+    }
+  },
+  "paper-dreams": {
+    "back": {
+      "src": "products/paper-dreams/print-back.webp",
+      "rect": [
+        -0.022,
+        0.3547,
+        0.42,
+        0.546
+      ]
+    }
+  },
+  "kraken": {
+    "front": {
+      "src": "products/kraken/print-front.webp",
+      "rect": [
+        -0.0939,
+        0.3291,
+        0.4153,
+        0.4352
+      ]
+    },
+    "back": {
+      "src": "products/kraken/print-back.webp",
+      "rect": [
+        -0.0515,
+        0.4415,
+        0.42,
+        0.2475
+      ]
+    }
+  },
+  "sunset-rock": {
+    "back": {
+      "src": "products/sunset-rock/print-back.webp",
+      "rect": [
+        -0.0147,
+        0.375,
+        0.411,
+        0.6
+      ]
+    },
+    "back-white": {
+      "src": "products/sunset-rock/print-back-white.webp",
+      "rect": [
+        -0.0202,
+        0.3731,
+        0.42,
+        0.5961
+      ]
+    }
+  },
+  "brave-bird": {
+    "back": {
+      "src": "products/brave-bird/print-back.webp",
+      "rect": [
+        -0.0061,
+        0.3697,
+        0.42,
+        0.5894
+      ]
+    },
+    "back-white": {
+      "src": "products/brave-bird/print-back-white.webp",
+      "rect": [
+        -0.0109,
+        0.3707,
+        0.42,
+        0.5913
+      ]
+    }
+  }
+}
