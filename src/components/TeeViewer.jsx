@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 export const hasWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
 
+// GPU resets (Windows driver timeouts, sleep/wake, driver updates) usually clear
+// within a second or two, so a lost device is rebuilt — lighter — before giving up.
+const MAX_RESTARTS = 2;
+
 /**
  * React host for the WebGPU cloth-simulated tee (src/tee3d/engine.js, generated
  * from forauls-tiger-tee.html). One canvas, one simulated shirt; the colourway's
@@ -29,18 +33,41 @@ export default function TeeViewer({
   const api = useRef(null);
   const applied = useRef({ colorway: null, mode: null });
   const [status, setStatus] = useState(hasWebGPU ? 'loading' : 'unsupported');
+  const [attempt, setAttempt] = useState(0);
+  const lastYaw = useRef(null); // a rebuilt engine resumes at the angle the old one was showing
 
   const latest = useRef(null);
   latest.current = { colorway, mode, autoSpin, initialAngle, framing, rotation, onStatus, onInteract };
 
-  // mount / unmount the engine (StrictMode-safe: a cancelled init destroys itself)
+  // mount / unmount the engine (StrictMode-safe: a cancelled init destroys itself);
+  // bumping `attempt` tears down a dead engine and builds a fresh one
   useEffect(() => {
     if (!hasWebGPU) {
       latest.current.onStatus?.('unsupported');
       return;
     }
     let cancelled = false;
+    let failed = false;
     let instance = null;
+    let restartTimer = 0;
+    const report = (s) => {
+      setStatus(s);
+      latest.current.onStatus?.(s);
+    };
+    const fail = (err) => {
+      if (cancelled || failed) return;
+      failed = true;
+      console.warn('[3D tee]', err);
+      instance?.destroy();
+      instance = api.current = null;
+      if (apiRef) apiRef.current = null;
+      if (attempt < MAX_RESTARTS) {
+        report('loading');
+        restartTimer = setTimeout(() => setAttempt((a) => a + 1), 800 * (attempt + 1));
+      } else {
+        report('error');
+      }
+    };
     (async () => {
       try {
         const { createTeeViewer } = await import('../tee3d/engine.js');
@@ -52,40 +79,38 @@ export default function TeeViewer({
           colour: L.colorway.tone,
           mode: L.mode,
           autoSpin: L.autoSpin,
-          yaw: (-L.initialAngle * Math.PI) / 180,
+          yaw: lastYaw.current ?? (-L.initialAngle * Math.PI) / 180,
           framing: L.framing,
-          onYaw: (rad) => latest.current.rotation?.set((-rad * 180) / Math.PI),
-          onInteract: () => latest.current.onInteract?.(),
-          onError: () => {
-            setStatus('error');
-            latest.current.onStatus?.('error');
+          lite: attempt > 0,
+          onYaw: (rad) => {
+            lastYaw.current = rad;
+            latest.current.rotation?.set((-rad * 180) / Math.PI);
           },
+          onInteract: () => latest.current.onInteract?.(),
+          onError: fail,
         });
-        if (cancelled) {
+        if (cancelled || failed) {
           instance.destroy();
           return;
         }
         applied.current = { colorway: L.colorway, mode: L.mode };
         api.current = instance;
         if (apiRef) apiRef.current = instance;
-        setStatus('ready');
-        latest.current.onStatus?.('ready');
+        report('ready');
       } catch (err) {
-        if (cancelled) return;
-        console.warn('[3D tee]', err);
-        setStatus('error');
-        latest.current.onStatus?.('error');
+        fail(err);
       }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(restartTimer);
       instance?.destroy();
       api.current = null;
       if (apiRef) apiRef.current = null;
     };
-    // the engine is created once; prop changes are pushed in below
+    // the engine is created once per attempt; prop changes are pushed in below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
 
   // colourway: swap fabric tone + prints on the same simulated shirt
   useEffect(() => {

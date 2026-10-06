@@ -47,7 +47,7 @@ core = patch(core, "  frontAspect: 0.2, backAspect: 1.36,\n", "  frontAspect: 0.
 core = patch(
     core,
     "if (info.reason !== 'destroyed') showFallback('The GPU device was lost (' + info.message + '). Reload to try again.');",
-    "if (info.reason !== 'destroyed') opts.onError?.(new Error('The GPU device was lost (' + info.message + ').'));",
+    "if (info.reason !== 'destroyed') onDeviceLost(info);",
 )
 core = patch(
     core,
@@ -86,9 +86,13 @@ HEADER = """/* eslint-disable */
 
 /**
  * Mounts the 3D tee on `canvas`.
- * options: { front, back: { src, rect? }, colour, mode, yaw, autoSpin, framing: { dy, dist },
+ * options: { front, back: { src, rect? }, colour, mode, yaw, autoSpin, framing: { dy, dist }, lite,
  *            onYaw(rad), onMode(mode), onToast(msg), onInteract(), onError(err) }
- * Resolves to an API object; rejects if WebGPU is unavailable.
+ * `lite` starts (and stays) on the cheaper end of the quality ladder — used when
+ * rebuilding after the GPU was reset.
+ * Resolves to an API object; rejects if WebGPU is unavailable or the GPU is lost
+ * during start-up. onError fires if the device is lost afterwards (driver reset,
+ * TDR, sleep/wake); the instance is dead then and should be destroyed and rebuilt.
  */
 export async function createTeeViewer(canvas, options = {}) {
 const opts = options;
@@ -104,8 +108,15 @@ FOOTER = r"""
    MAIN LOOP (adapted: start/stop, auto-spin, yaw reporting)
    ===================================================================== */
 let lastT = performance.now(), acc = 0, fpsAvg = 60, scaleT = performance.now() + 2500;
-const baseQuality = IS_MOBILE ? 1 : 0;
-let raf = 0, running = false, destroyed = false, lastYaw = NaN;
+const baseQuality = opts.lite ? QUALITY.length - 2 : IS_MOBILE ? 1 : 0;
+let raf = 0, running = false, destroyed = false, booted = false, lostInfo = null, lastYaw = NaN;
+
+/** A lost device can't be revived: stop submitting work and let the host rebuild us. */
+function onDeviceLost(info) {
+  lostInfo = info; stop();
+  if (booted && !destroyed) opts.onError?.(new Error('The GPU device was lost (' + info.message + ').'));
+}
+
 function frame(now) {
   if (destroyed || !running) return;
   const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
@@ -175,6 +186,7 @@ async function applyPrint(which, p) {
    BOOT
    ===================================================================== */
 await initGPU();
+if (opts.lite) CFG.shadowSize = 1024;
 device.pushErrorScope('validation');
 G = buildGarment();
 createSimBuffers();
@@ -183,7 +195,10 @@ buildHanger();
 await Promise.all([applyPrint('front', opts.front), applyPrint('back', opts.back)]);
 createRenderPipelines();
 const bootErr = await device.popErrorScope();
-if (bootErr) { device.destroy(); throw new Error(bootErr.message); }
+if (bootErr || lostInfo) {
+  device.destroy();
+  throw new Error(bootErr ? bootErr.message : 'The GPU device was lost during start-up (' + lostInfo.message + ').');
+}
 applyQuality(baseQuality);
 wirePointer();
 if (opts.colour && COLOURWAYS[opts.colour]) state.colour = opts.colour;
@@ -192,6 +207,7 @@ setMode(opts.mode || 'mannequin');
 applyFraming();
 camera.yaw = camera.goal.yaw = opts.yaw || 0;
 lastView = viewInfo();
+booted = true;
 start();
 
 return {

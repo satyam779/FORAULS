@@ -64,6 +64,7 @@ function ProductView({ product }) {
   const rotation = useMotionValue(0);
   const tween = useRef(null);
   const [viewer, setViewer] = useState(hasWebGPU ? 'loading' : 'unsupported');
+  const [viewerKey, setViewerKey] = useState(0); // bumped to remount the 3D viewer after a GPU failure
   const [simMode, setSimMode] = useState('mannequin');
   const [spinning, setSpinning] = useState(false);
   const [wind, setWind] = useState(false);
@@ -93,6 +94,10 @@ function ProductView({ product }) {
     setViewer(s);
     if (s === 'ready') turnTo(product.cardFace === 'front' ? 360 : 540, 2.2);
     if (s === 'unsupported' || s === 'error') setMode('photo');
+  };
+  const retry3d = () => {
+    setViewer('loading');
+    setViewerKey((k) => k + 1);
   };
 
   const interact = () => {
@@ -179,6 +184,7 @@ function ProductView({ product }) {
         >
           {hasWebGPU && (
             <TeeViewer
+              key={viewerKey}
               className="absolute inset-0"
               colorway={colorway}
               mode={simMode}
@@ -207,10 +213,13 @@ function ProductView({ product }) {
               ].map(([id, text]) => (
                 <button
                   key={id}
-                  onClick={() => setMode(id)}
+                  onClick={() => {
+                    if (id === '3d' && viewer === 'error') retry3d();
+                    setMode(id);
+                  }}
                   aria-pressed={mode === id}
-                  disabled={id === '3d' && !can3d}
-                  title={id === '3d' && !can3d ? '3D view needs a WebGPU browser (Chrome, Edge or Safari 26+)' : undefined}
+                  disabled={id === '3d' && viewer === 'unsupported'}
+                  title={id === '3d' && viewer === 'unsupported' ? '3D view needs a WebGPU browser (Chrome, Edge or Safari 26+)' : undefined}
                   className="relative h-11 rounded-full px-5 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-45 sm:px-7"
                 >
                   {mode === id && (
@@ -235,7 +244,9 @@ function ProductView({ product }) {
             ) : (
               !can3d && (
                 <p className="rounded-full bg-paper/80 px-3 py-1 text-xs font-medium text-ink-2 backdrop-blur">
-                  3D view needs a WebGPU browser — showing photos
+                  {viewer === 'error'
+                    ? '3D view hit a graphics error — tap 3D View to try again'
+                    : '3D view needs a WebGPU browser — showing photos'}
                 </p>
               )
             )}
