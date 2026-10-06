@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { getProduct, products } from '../data/products';
 import { STORE } from '../config/store';
+import { useMeta } from '../lib/useMeta';
 import { useCart } from '../lib/cart';
 import { discount, formatPrice } from '../lib/format';
 import TeeViewer, { hasWebGPU } from '../components/TeeViewer';
@@ -69,9 +70,7 @@ function ProductView({ product }) {
   const [interacted, setInteracted] = useState(false);
   const can3d = viewer === 'loading' || viewer === 'ready';
 
-  useEffect(() => {
-    document.title = `${product.short} — FORAULS`;
-  }, [product]);
+  useMeta(`${product.name} — ${STORE.name}`, product.blurb);
 
   useEffect(() => () => tween.current?.stop(), []);
 

@@ -1,0 +1,2 @@
+# Netlify: serve the app for any route that isn't a real file (deep links)
+/*    /index.html    200

@@ -8,6 +8,7 @@ import TeeViewer, { hasWebGPU } from '../components/TeeViewer';
 import ProductCard from '../components/ProductCard';
 import FeatureIcon from '../components/FeatureIcon';
 import { STORE } from '../config/store';
+import { useMeta } from '../lib/useMeta';
 
 const { gsm } = STORE.fabric;
 const { returnsDays, freeShippingAbove } = STORE.policies;
@@ -25,9 +26,7 @@ export default function Home() {
   const active = collections.includes(params.get('c')) ? params.get('c') : 'All';
   const list = active === 'All' ? products : products.filter((p) => p.collection === active);
 
-  useEffect(() => {
-    document.title = 'FORAULS — Oversized Graphic Tees';
-  }, []);
+  useMeta(`${STORE.name} — Oversized Graphic Tees`, STORE.description);
 
   useEffect(() => {
     if (hash === '#shop') document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
