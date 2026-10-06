@@ -112,12 +112,21 @@ export default function TeeViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
-  // colourway: swap fabric tone + prints on the same simulated shirt
+  // colourway: swap fabric tone + prints on the same simulated shirt. Compared by
+  // content, so a re-fetched catalog doesn't reload textures, and a placement-only
+  // change (admin editor) just moves the prints.
   useEffect(() => {
-    if (status !== 'ready' || applied.current.colorway === colorway) return;
+    const prev = applied.current.colorway;
+    if (status !== 'ready' || prev === colorway) return;
     applied.current.colorway = colorway;
-    api.current.setColour(colorway.tone);
-    api.current.setPrints(colorway.prints);
+    const a = api.current;
+    if (prev?.tone !== colorway.tone) a.setColour(colorway.tone);
+    const srcs = (c) => `${c?.prints.front?.src}|${c?.prints.back?.src}`;
+    if (srcs(prev) !== srcs(colorway)) a.setPrints(colorway.prints);
+    else {
+      a.setPrintRect('front', colorway.prints.front?.rect);
+      a.setPrintRect('back', colorway.prints.back?.rect);
+    }
   }, [colorway, status]);
 
   useEffect(() => {

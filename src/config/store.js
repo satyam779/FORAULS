@@ -1,7 +1,7 @@
 /**
  * Store-wide settings. Edit these before launch — everything customer-facing
- * (policies, sizes, links) reads from here. Product names and prices live in
- * src/data/products.js.
+ * (policies, sizes, links) reads from here. Products are managed in the admin
+ * (/admin) once Supabase is connected; src/data/products.js is the built-in catalog.
  */
 export const STORE = {
   name: 'FORAULS',
@@ -17,14 +17,19 @@ export const STORE = {
 
   /**
    * Online ordering. false = lookbook: no cart, no checkout, products marked
-   * "Coming soon". Set to true once a checkout is connected.
+   * "Coming soon". true = cart + cash-on-delivery checkout (needs Supabase and
+   * the email settings — see README).
    */
-  commerce: false,
+  commerce: true,
+
+  /** Shown in order emails and on the order confirmation page. */
+  contactEmail: '', // e.g. 'hello@forauls.com'
 
   // Policies shown on product pages, the footer and the marquee.
   // Set a value to null to hide that line.
   policies: {
-    freeShippingAbove: 999, // ₹
+    freeShippingAbove: 999, // ₹ — orders at or above this ship free
+    shippingFee: 79, // ₹ — charged below the free-shipping threshold
     returnsDays: 7,
     dispatch: 'Dispatched within 24–48 hours',
     cod: true,
@@ -53,6 +58,10 @@ export const STORE = {
 };
 
 const P = STORE.policies;
+
+/** Shipping charge for a cart subtotal (₹). Used by checkout and by the order API. */
+export const shippingFor = (subtotal) =>
+  P.freeShippingAbove != null && subtotal >= P.freeShippingAbove ? 0 : (P.shippingFee ?? 0);
 
 /** Short policy lines for the footer / marquee, built from the settings above. */
 export const policyLines = [

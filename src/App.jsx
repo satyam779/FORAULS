@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { CatalogProvider } from './lib/catalog';
 import { CartProvider } from './lib/cart';
 import { STORE } from './config/store';
 import Header from './components/Header';
@@ -11,6 +12,9 @@ import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 
 const Product = lazy(() => import('./pages/Product'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderPlaced = lazy(() => import('./pages/OrderPlaced'));
+const Admin = lazy(() => import('./pages/admin/Admin'));
 
 function Page({ children }) {
   const { hash } = useLocation();
@@ -33,20 +37,35 @@ function Page({ children }) {
 
 export default function App() {
   const location = useLocation();
+  const admin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
   return (
     <MotionConfig reducedMotion="user">
-      <CartProvider>
-        <Header />
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Page><Home /></Page>} />
-            <Route path="/product/:slug" element={<Page><Product /></Page>} />
-            <Route path="*" element={<Page><NotFound /></Page>} />
-          </Routes>
-        </AnimatePresence>
-        <Footer />
-        {STORE.commerce && <CartDrawer />}
-      </CartProvider>
+      <CatalogProvider>
+        <CartProvider>
+          {!admin && <Header />}
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={admin ? '/admin' : location.pathname}>
+              <Route path="/" element={<Page><Home /></Page>} />
+              <Route path="/product/:slug" element={<Page><Product /></Page>} />
+              {STORE.commerce && <Route path="/checkout" element={<Page><Checkout /></Page>} />}
+              {STORE.commerce && <Route path="/order/:number" element={<Page><OrderPlaced /></Page>} />}
+              <Route
+                path="/admin/*"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<div className="min-h-svh bg-zinc-100" aria-busy="true" />}>
+                      <Admin />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route path="*" element={<Page><NotFound /></Page>} />
+            </Routes>
+          </AnimatePresence>
+          {!admin && <Footer />}
+          {STORE.commerce && !admin && <CartDrawer />}
+        </CartProvider>
+      </CatalogProvider>
     </MotionConfig>
   );
 }

@@ -1194,7 +1194,7 @@ function createSimPipelines() {
    ARTWORK TEXTURES
    ===================================================================== */
 function loadImage(src) {
-  return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = src; });
+  return new Promise((res, rej) => { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => res(img); img.onerror = rej; img.src = src; });
 }
 /** Procedural stand-ins used when a placeholder is left empty or fails to decode. */
 function fallbackArt(which) {
@@ -1412,7 +1412,7 @@ function applyQuality(level) {
   CFG.substeps = q.substeps; CFG.iterations = q.iterations; renderScale = q.scale;
 }
 function resizeTargets() {
-  const dpr = Math.max(0.6, Math.min(window.devicePixelRatio || 1, CFG.maxDpr) * renderScale);
+  const dpr = captureReq ? captureReq.dpr : Math.max(0.6, Math.min(window.devicePixelRatio || 1, CFG.maxDpr) * renderScale);
   const w = Math.max(1, Math.floor(canvas.clientWidth * dpr)), h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
   if (canvas.width === w && canvas.height === h && gpu.msaaTex) return;
   canvas.width = w; canvas.height = h;
@@ -1520,17 +1520,17 @@ function encodeDepth(enc, tex, bg) {
 function encodeMain(enc) {
   const P = gpu.pipes, B = gpu.bg;
   const pass = enc.beginRenderPass({
-    colorAttachments: [{ view: gpu.msaaTex.createView(), resolveTarget: context.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'discard', clearValue: [0.9, 0.9, 0.91, 1] }],
+    colorAttachments: [{ view: gpu.msaaTex.createView(), resolveTarget: context.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'discard', clearValue: captureReq ? [0, 0, 0, 0] : [0.9, 0.9, 0.91, 1] }],
     depthStencilAttachment: { view: gpu.depthTex.createView(), depthClearValue: 1, depthLoadOp: 'clear', depthStoreOp: 'discard' },
   });
-  pass.setPipeline(P.bgPipe); pass.setBindGroup(0, B.bgPipe); pass.draw(3);
+  if (!captureReq) { pass.setPipeline(P.bgPipe); pass.setBindGroup(0, B.bgPipe); pass.draw(3); }
   if (state.mode === 'hanger') {
     pass.setPipeline(P.hanger); pass.setBindGroup(0, B.hanger);
     pass.setVertexBuffer(0, gpu.hangerVB); pass.setIndexBuffer(gpu.hangerIB, 'uint32'); pass.drawIndexed(gpu.hangerCount);
   }
   pass.setPipeline(P.shirt); pass.setBindGroup(0, B.shirt);
   pass.setIndexBuffer(gpu.index, 'uint32'); pass.drawIndexed(G.indices.length);
-  if (gpu.pinCount) { pass.setPipeline(P.pins); pass.setBindGroup(0, B.pins); pass.draw(6, gpu.pinCount); }
+  if (gpu.pinCount && !captureReq) { pass.setPipeline(P.pins); pass.setBindGroup(0, B.pins); pass.draw(6, gpu.pinCount); }
   pass.end();
 }
 /** Copies cloth positions back to the CPU (one in flight) for picking and framing. */
@@ -1846,7 +1846,46 @@ let raf = 0, running = false, destroyed = false, booted = false, lostInfo = null
 /** A lost device can't be revived: stop submitting work and let the host rebuild us. */
 function onDeviceLost(info) {
   lostInfo = info; stop();
+  if (captureReq) { captureReq.reject(new Error('The GPU device was lost.')); captureReq = null; }
   if (booted && !destroyed) opts.onError?.(new Error('The GPU device was lost (' + info.message + ').'));
+}
+
+/* ---- capture: a transparent, high-resolution still of the tee (product images) ---- */
+let captureReq = null, restoreOpaque = false;
+const CAPTURE_VIEW = { pitch: 0.06, dist: 2.45, target: [0, 0.62, 0] };
+/**
+ * Renders the tee from `yaw` (0 = front, π = back) on a transparent background
+ * at `dpr` × the canvas's CSS size and resolves to a 2D canvas copy of it.
+ */
+function capture({ yaw = 0, dpr = 2.5 } = {}) {
+  if (destroyed || lostInfo) return Promise.reject(new Error('The 3D view is not running.'));
+  if (captureReq) return Promise.reject(new Error('A capture is already in progress.'));
+  const saved = { ...camera.goal };
+  Object.assign(camera.goal, CAPTURE_VIEW, { yaw });
+  Object.assign(camera, CAPTURE_VIEW, { yaw, target: [...CAPTURE_VIEW.target] });
+  return new Promise((resolve, reject) => {
+    const done = (fn) => (v) => {
+      clearTimeout(timer);
+      if (captureReq === req) captureReq = null;
+      restoreOpaque = true;
+      Object.assign(camera.goal, saved);
+      fn(v);
+    };
+    const req = { frames: 2, dpr, armed: false, resolve: done(resolve), reject: done(reject) };
+    const timer = setTimeout(() => req.reject(new Error('Capturing the 3D view timed out.')), 5000);
+    captureReq = req;
+    start();
+  });
+}
+function captureFrame() {
+  const req = captureReq;
+  if (--req.frames > 0) return;
+  try {
+    const out = document.createElement('canvas');
+    out.width = canvas.width; out.height = canvas.height;
+    out.getContext('2d').drawImage(canvas, 0, 0);   // same task as the submit: reads this frame
+    req.resolve(out);
+  } catch (e) { req.reject(e); }
 }
 
 function frame(now) {
@@ -1857,7 +1896,14 @@ function frame(now) {
     if (fpsAvg < 50 && qualityLevel < QUALITY.length - 1) { applyQuality(qualityLevel + 1); scaleT = now; }
     else if (fpsAvg > 59 && qualityLevel > baseQuality && now - scaleT > 4000) { applyQuality(qualityLevel - 1); scaleT = now; }
   }
-  if (state.autoSpin && !state.userActive && !state.grab) camera.goal.yaw += state.autoSpin * dt;
+  if (state.autoSpin && !state.userActive && !state.grab && !captureReq) camera.goal.yaw += state.autoSpin * dt;
+  if (captureReq && !captureReq.armed) {
+    context.configure({ device, format: canvasFormat, alphaMode: 'premultiplied' });
+    captureReq.armed = true; scaleT = now;
+  } else if (restoreOpaque && !captureReq) {
+    context.configure({ device, format: canvasFormat, alphaMode: 'opaque' });
+    restoreOpaque = false;
+  }
 
   resizeTargets();
   updateCamera(dt);
@@ -1891,6 +1937,7 @@ function frame(now) {
   const rb = encodeReadback(enc);
   device.queue.submit([enc.finish()]);
   if (rb) finishReadback();
+  if (captureReq) captureFrame();
   raf = requestAnimationFrame(frame);
 }
 function start() {
@@ -1908,10 +1955,18 @@ function applyFraming() {
   camera.goal.dist *= f.dist || 1;
 }
 
-/** Loads front/back artwork; a rect places it on the pattern (metres: cx, cy, w, h). */
+/** Loads front/back artwork; a rect places it on the pattern (metres: cx, cy, w, h). No print = plain fabric. */
 async function applyPrint(which, p) {
-  await setArtwork(which, p?.src ?? null);
+  if (p?.src) await setArtwork(which, p.src);
+  else clearArtwork(which);
   state[which === 'front' ? 'frontRect' : 'backRect'] = p?.rect ?? null;
+}
+function clearArtwork(which) {
+  const blank = document.createElement('canvas'); blank.width = blank.height = 4;   // fully transparent
+  const key = which === 'front' ? 'frontTex' : 'backTex';
+  if (gpu[key]) { const old = gpu[key]; setTimeout(() => old.destroy(), 500); }
+  gpu[key] = makeTexture(blank).tex;
+  if (gpu.pipes?.shirt) buildShirtBindGroup();
 }
 
 /* =====================================================================
@@ -1945,6 +2000,10 @@ start();
 return {
   /** Swap artwork: { front: { src, rect }, back: { src, rect } } */
   setPrints: (p) => Promise.all([applyPrint('front', p.front), applyPrint('back', p.back)]),
+  /** Move/resize one print without reloading it: rect = [cx, cy, w, h] in pattern metres (null = default). */
+  setPrintRect: (which, rect) => { state[which === 'front' ? 'frontRect' : 'backRect'] = rect ?? null; },
+  /** Transparent still of the tee: { yaw, dpr } → Promise<HTMLCanvasElement>. */
+  capture,
   setColour: (id) => { if (COLOURWAYS[id]) state.colour = id; },
   setMode: (m) => { setMode(m, true); applyFraming(); },
   reset: () => { setMode(state.mode); applyFraming(); },
@@ -1958,6 +2017,7 @@ return {
   setActive: (on) => (on ? start() : stop()),
   destroy: () => {
     destroyed = true; stop();
+    captureReq?.reject(new Error('The 3D view was closed.'));
     cleanups.forEach((f) => f());
     try { device.destroy(); } catch (e) { /* already gone */ }
   },

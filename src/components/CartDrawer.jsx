@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Trash2, Truck, X } from 'lucide-react';
 import { useCart } from '../lib/cart';
@@ -13,12 +12,12 @@ export default function CartDrawer() {
   const { lines, subtotal, count, setQty, open, setOpen } = useCart();
   const close = () => setOpen(false);
   const panelRef = useDialog(open, close);
-  const [note, setNote] = useState(false);
+  const navigate = useNavigate();
   const remaining = FREE_AT != null ? Math.max(0, FREE_AT - subtotal) : 0;
   const progress = FREE_AT ? Math.min(1, subtotal / FREE_AT) : 1;
 
   return (
-    <AnimatePresence onExitComplete={() => setNote(false)}>
+    <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={close} aria-hidden />
@@ -161,16 +160,14 @@ export default function CartDrawer() {
                   </div>
                   <p className="mt-1 text-sm text-muted">Taxes included. Shipping calculated at checkout.</p>
                   <button
-                    onClick={() => setNote(true)}
+                    onClick={() => {
+                      close();
+                      navigate('/checkout');
+                    }}
                     className="mt-4 h-14 w-full rounded-2xl bg-ink text-base font-semibold text-paper transition-transform active:scale-[0.98]"
                   >
                     Checkout
                   </button>
-                  {note && (
-                    <p role="status" className="mt-3 text-center text-sm text-muted">
-                      Online checkout is coming soon.
-                    </p>
-                  )}
                 </div>
               </>
             )}

@@ -17,7 +17,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { getProduct, products } from '../data/products';
+import { useCatalog } from '../lib/catalog';
 import { STORE } from '../config/store';
 import { useMeta } from '../lib/useMeta';
 import { useCart } from '../lib/cart';
@@ -41,8 +41,10 @@ const SIM_MODES = [
 
 export default function Product() {
   const { slug } = useParams();
+  const { getProduct, ready } = useCatalog();
   const product = getProduct(slug);
-  if (!product) return <NotFound />;
+  // a product added in the admin isn't in the bundled catalog: wait for the live one
+  if (!product) return ready ? <NotFound /> : <div className="tee-stage min-h-[88svh]" aria-busy="true" />;
   return <ProductView key={slug} product={product} />;
 }
 
@@ -50,7 +52,8 @@ function ProductView({ product }) {
   const { add, setOpen } = useCart();
   const reduced = useReducedMotion();
   const [colorId, setColorId] = useState(product.colors[0].id);
-  const colorway = product.colors.find((c) => c.id === colorId);
+  const { products } = useCatalog();
+  const colorway = product.colors.find((c) => c.id === colorId) ?? product.colors[0];
   const [size, setSize] = useState(null);
   const [sizeError, setSizeError] = useState(0);
   const [mode, setMode] = useState(hasWebGPU ? '3d' : 'photo');
@@ -134,7 +137,7 @@ function ProductView({ product }) {
   const related = useMemo(() => {
     const others = products.filter((p) => p.slug !== product.slug);
     return [...others.filter((p) => p.collection === product.collection), ...others.filter((p) => p.collection !== product.collection)].slice(0, 3);
-  }, [product]);
+  }, [product, products]);
 
   const openPhoto = (i) => {
     setPhoto(i);
@@ -146,7 +149,7 @@ function ProductView({ product }) {
       setSizeError((n) => n + 1);
       return;
     }
-    add(product.slug, colorId, size);
+    add(product.slug, colorway.id, size);
     setAdded(true);
     setTimeout(() => setOpen(true), 500);
     setTimeout(() => setAdded(false), 2000);

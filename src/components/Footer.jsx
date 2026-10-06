@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { collections } from '../data/products';
+import { useCatalog } from '../lib/catalog';
 import { STORE, policyLines } from '../config/store';
 
 export default function Footer() {
+  const { collections } = useCatalog();
   return (
     <footer className="bg-ink text-zinc-300">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">

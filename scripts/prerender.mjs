@@ -6,6 +6,7 @@
  *
  * Run automatically by `npm run build`.
  */
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 
@@ -13,9 +14,29 @@ const DIST = new URL('../dist/', import.meta.url);
 
 // Load the catalog through Vite so JSON imports and import.meta.env just work.
 const vite = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom', logLevel: 'error' });
-const { products } = await vite.ssrLoadModule('/src/data/products.js');
+const { products: builtin } = await vite.ssrLoadModule('/src/data/products.js');
+const { fromRow } = await vite.ssrLoadModule('/src/data/catalog.js');
 const { STORE } = await vite.ssrLoadModule('/src/config/store.js');
 await vite.close();
+
+// With Supabase configured, products added in the admin get pages too (as of this build).
+async function liveProducts() {
+  const url = (process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.VITE_SUPABASE_KEY || '';
+  if (!url || !key) return null;
+  try {
+    const res = await fetch(`${url}/rest/v1/products?select=*&active=eq.true&order=sort.asc`, {
+      headers: { apikey: key, ...(key.startsWith('eyJ') && { Authorization: `Bearer ${key}` }) },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    return rows.length ? rows.map(fromRow) : null;
+  } catch (e) {
+    console.warn(`⚠  Couldn't load products from Supabase (${e.message}); prerendering the bundled catalog.`);
+    return null;
+  }
+}
+const products = (await liveProducts()) ?? builtin;
 
 const site = (
   STORE.siteUrl ||
@@ -25,7 +46,7 @@ const site = (
   ''
 ).replace(/\/+$/, '');
 
-const abs = (path) => (site ? site + path : path);
+const abs = (path) => (/^https?:/.test(path) || !site ? path : site + path);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const shell = await readFile(new URL('index.html', DIST), 'utf8');
 
@@ -38,8 +59,8 @@ function render({ path, title, description, image, noindex = false }) {
     `<meta property="og:description" content="${esc(description)}" />`,
     site && `<meta property="og:url" content="${abs(path)}" />`,
     `<meta property="og:image" content="${abs(image)}" />`,
-    '<meta property="og:image:width" content="1200" />',
-    '<meta property="og:image:height" content="630" />',
+    image.startsWith('/og/') && '<meta property="og:image:width" content="1200" />',
+    image.startsWith('/og/') && '<meta property="og:image:height" content="630" />',
     `<meta name="twitter:title" content="${esc(title)}" />`,
     `<meta name="twitter:description" content="${esc(description)}" />`,
     `<meta name="twitter:image" content="${abs(image)}" />`,
@@ -63,7 +84,8 @@ const pages = [
     file: `product/${p.slug}/index.html`,
     title: `${p.name} — ${STORE.name}`,
     description: p.blurb,
-    image: `/og/${p.slug}.jpg`,
+    // made-for-sharing card if there is one, else the product image
+    image: existsSync(new URL(`og/${p.slug}.jpg`, DIST)) ? `/og/${p.slug}.jpg` : p.colors[0][p.cardFace].src,
   })),
 ];
 
@@ -73,7 +95,7 @@ await write(
   render({ path: '/404', title: `Page not found — ${STORE.name}`, description: STORE.description, image: '/og/home.jpg', noindex: true }),
 );
 
-await writeFile(new URL('robots.txt', DIST), `User-agent: *\nAllow: /\n${site ? `\nSitemap: ${site}/sitemap.xml\n` : ''}`);
+await writeFile(new URL('robots.txt', DIST), `User-agent: *\nAllow: /\nDisallow: /admin\n${site ?`\nSitemap: ${site}/sitemap.xml\n` : ''}`);
 if (site) {
   const urls = pages.map((p) => `  <url><loc>${abs(p.path)}</loc></url>`).join('\n');
   await writeFile(

@@ -2,11 +2,12 @@ import { Link, NavLink } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '../lib/cart';
-import { collections } from '../data/products';
+import { useCatalog } from '../lib/catalog';
 import { STORE } from '../config/store';
 
 export default function Header() {
   const { count, setOpen } = useCart();
+  const { collections } = useCatalog();
   return (
     <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/80 backdrop-blur-xl">
       <a

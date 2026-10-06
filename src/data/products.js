@@ -45,6 +45,9 @@ const FEATURES = [
   STORE.policies.returnsDays != null && { icon: 'package', label: `Easy ${STORE.policies.returnsDays} Day Returns` },
 ].filter(Boolean);
 
+/** Feature bullets for a product; `fit` replaces the default "Oversized Fit" line. */
+export const featuresFor = (fit) => (fit ? FEATURES.map((f) => (f.icon === 'shirt' ? { ...f, label: fit } : f)) : FEATURES);
+
 const raw = [
   {
     slug: 'tiger-lily',
@@ -171,17 +174,19 @@ const raw = [
   },
 ];
 
-export const products = raw.map((p) => {
+/**
+ * The built-in catalog. It's bundled so pages render instantly, and it seeds the
+ * Supabase `products` table (scripts/make-seed.mjs). Once Supabase is connected
+ * the live catalog replaces it — see src/lib/catalog.jsx.
+ */
+export const products = raw.map((p, i) => {
   const m = manifest[p.slug];
   return {
     ...p,
     cardFace: p.cardFace ?? 'back',
-    features: p.fit ? FEATURES.map((f) => (f.icon === 'shirt' ? { ...f, label: p.fit } : f)) : FEATURES,
+    features: featuresFor(p.fit),
     colors: p.colors(m),
     photos: m.photos.map((ph) => ({ ...ph, src: asset(ph.src), srcSm: asset(ph.src.replace(/\.webp$/, '-sm.webp')) })),
+    sort: (i + 1) * 10,
   };
 });
-
-export const collections = ['All', ...new Set(products.map((p) => p.collection))];
-
-export const getProduct = (slug) => products.find((p) => p.slug === slug);

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Rotate3d, Sparkles } from 'lucide-react';
-import { collections, getProduct, products } from '../data/products';
+import { useCatalog } from '../lib/catalog';
 import { formatPrice } from '../lib/format';
 import TeeViewer, { hasWebGPU } from '../components/TeeViewer';
 import ProductCard from '../components/ProductCard';
@@ -13,14 +13,13 @@ import { useMeta } from '../lib/useMeta';
 const { gsm } = STORE.fabric;
 const { returnsDays, freeShippingAbove } = STORE.policies;
 
-const featured = getProduct('tiger-lily');
-
 const rise = {
   hidden: { opacity: 0, y: 24 },
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: 0.08 * i, duration: 0.7, ease: [0.16, 1, 0.3, 1] } }),
 };
 
 export default function Home() {
+  const { products, collections } = useCatalog();
   const [params, setParams] = useSearchParams();
   const { hash } = useLocation();
   const active = collections.includes(params.get('c')) ? params.get('c') : 'All';
@@ -92,6 +91,8 @@ export default function Home() {
 }
 
 function Hero() {
+  const { products, getProduct } = useCatalog();
+  const featured = getProduct('tiger-lily') ?? products[0];
   const c = featured.colors[0];
 
   return (
